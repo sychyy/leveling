@@ -1,16 +1,21 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chrome = require('chrome-aws-lambda');
 
 module.exports = async (req, res) => {
-    const { background, level, exp, count, avatar } = req.query;
-
-    if (!background || !level || !exp || !count || !avatar) {
-        return res.status(400).send("Missing required query parameters");
-    }
-
     try {
-        // Launch puppeteer browser
+        const { background, level, exp, count, avatar } = req.query;
+
+        // Pastikan semua query parameter ada
+        if (!background || !level || !exp || !count || !avatar) {
+            return res.status(400).send("Missing required query parameters");
+        }
+
+        // Launch puppeteer browser dengan chromium dari chrome-aws-lambda
         const browser = await puppeteer.launch({
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],  // Tambahkan argumen untuk Vercel
+            headless: "new",
+            args: [...chrome.args, '--no-sandbox', '--disable-setuid-sandbox'],
+            executablePath: await chrome.executablePath,
+            defaultViewport: chrome.defaultViewport
         });
         const page = await browser.newPage();
 
@@ -87,9 +92,8 @@ module.exports = async (req, res) => {
 
         res.setHeader('Content-Type', 'image/png');
         res.send(screenshot);  // Send the screenshot as the response
-
     } catch (error) {
-        console.error('Error rendering image:', error);
-        res.status(500).send('Internal Server Error');
+        console.error(error);  // Log the error for debugging
+        res.status(500).send("Internal Server Error");
     }
 };
