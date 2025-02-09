@@ -5,21 +5,22 @@ module.exports = async (req, res) => {
     try {
         const { background, level, exp, count, avatar } = req.query;
 
-        // Pastikan semua query parameter ada
+        // Pastikan semua parameter ada
         if (!background || !level || !exp || !count || !avatar) {
             return res.status(400).send("Missing required query parameters");
         }
 
-        // Launch puppeteer browser dengan chromium dari chrome-aws-lambda
+        // Launch Puppeteer browser dengan chromium dari chrome-aws-lambda
         const browser = await puppeteer.launch({
             headless: "new",
             args: [...chrome.args, '--no-sandbox', '--disable-setuid-sandbox'],
             executablePath: await chrome.executablePath,
             defaultViewport: chrome.defaultViewport
         });
+
         const page = await browser.newPage();
 
-        // HTML content to be rendered
+        // HTML content untuk di-render
         const content = `
         <html>
             <head>
@@ -92,8 +93,9 @@ module.exports = async (req, res) => {
 
         res.setHeader('Content-Type', 'image/png');
         res.send(screenshot);  // Send the screenshot as the response
+
     } catch (error) {
-        console.error(error);  // Log the error for debugging
+        console.error("Error rendering image:", error);
         res.status(500).send("Internal Server Error");
     }
 };
